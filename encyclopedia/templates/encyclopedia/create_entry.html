@@ -1,0 +1,37 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+Create New Entry
+{% endblock %}
+
+
+{% block body %}
+
+<h1>Create New Encyclopedia Entry</h1>
+
+<form action="" method="post" style="width: 80%; padding: 20px;">
+    {% csrf_token %}
+    {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                {{ error }}
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    
+    <div class="form-group">
+        {{form.title}}
+    </div>
+    
+    <div class="form-group">
+        {{form.markdown_content}}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+
+
+{% endblock %}
