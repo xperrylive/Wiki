@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from . import util
-from .forms import EntryFrom
+from .forms import EntryForm
 from markdown2 import markdown
 from django.http import Http404
 from random import choice
@@ -23,10 +23,9 @@ def search(request):
     search_query = request.GET.get("q","").strip().lower()
     if not search_query:
         return render(request, "encyclopedia/search_result.html", {"entries": []})
-    # should retreive a list of encyclopedias not the whole file content
     entries = util.list_entries()
     for entry in entries:
-        if search_query == entry.lower():
+        if search_query.lower().strip() == entry.lower():
             return redirect('entry', entry)
     
     search_result = [entry for entry in entries if search_query in entry.lower() ]
@@ -34,34 +33,27 @@ def search(request):
 
 def create_entry(request):
     if request.method == "POST":
-        form = EntryFrom(request.POST)
-        entries = util.list_entries()
+        form = EntryForm(request.POST)
         if form.is_valid():
             title = form.cleaned_data["title"]
             markdown_content = form.cleaned_data["markdown_content"]
-            if title.lower().strip() not in [entry.lower().strip() for entry in entries]:
-                util.save_entry(title,markdown_content)
-                return redirect("entry", title=title)
-            else:
-                form.add_error('title', 'An entry with this title already exists.')
-                return render(request,"encyclopedia/create_entry.html", {"form":form})
+            util.save_entry(title,markdown_content)
+            return redirect("entry", title=title)
     else:
-        form = EntryFrom()
+        form = EntryForm()
     
     return render(request,"encyclopedia/create_entry.html", {"form":form})
 
 def edit_encyclopedia(request, title):
     if request.method == "POST":
-        form = EntryFrom(request.POST)
+        form = EntryForm(request.POST, original_title=title)
         if form.is_valid():
             new_title = form.cleaned_data["title"]
             markdown_content = form.cleaned_data["markdown_content"]
-            entries = util.list_entries()
-            if new_title.strip().lower() != title.strip().lower() and new_title.strip().lower() in [entry.strip().lower() for entry in entries]:
-                form.add_error('title', 'An entry with this title already exists.')
-                return render(request, "encyclopedia/edit_entry.html", {"form":form})
             util.save_entry(new_title, markdown_content)
-            util.delete_entry(title) if new_title.strip().lower() != title.strip().lower() else None
+            if new_title.lower().strip() != title.lower().strip(): 
+                util.delete_entry(title)
+
             return redirect("entry", title=new_title)   
         else:
             return render(request, "encyclopedia/edit_entry.html", {"form":form})
@@ -69,8 +61,8 @@ def edit_encyclopedia(request, title):
         entry = util.get_entry(title)
         if not entry:
             raise Http404()
-        initial_data = {"title": title, "markdown_content":entry}
-        form = EntryFrom(initial=initial_data)
+        initial_data = {"title": title, "markdown_content":entry.strip()}
+        form = EntryForm(initial=initial_data)
 
     return render(request, "encyclopedia/edit_entry.html", {"form":form})
 
