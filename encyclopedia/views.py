@@ -44,7 +44,7 @@ def create_entry(request):
     
     return render(request,"encyclopedia/create_entry.html", {"form":form})
 
-def edit_encyclopedia(request, title):
+def edit_entry(request, title):
     if request.method == "POST":
         form = EntryForm(request.POST, original_title=title)
         if form.is_valid():
@@ -67,7 +67,7 @@ def edit_encyclopedia(request, title):
     return render(request, "encyclopedia/edit_entry.html", {"form":form})
 
 
-def random_encyclopedia(request):
+def random_entry(request):
     entries = util.list_entries()
     random_entry = choice(entries)
     return redirect("entry", title=random_entry)
