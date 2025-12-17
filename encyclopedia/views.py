@@ -20,16 +20,20 @@ def display_encyclopedia(request, title):
 
 # GET for search 
 def search(request):
-    search_query = request.GET.get("q","").strip().lower()
-    if not search_query:
+    query = request.GET.get("q","").strip().lower()
+    if not query:
         return render(request, "encyclopedia/search_result.html", {"entries": []})
     entries = util.list_entries()
+    match = []
     for entry in entries:
-        if search_query.lower().strip() == entry.lower():
+        entry_lower= entry.lower()
+        if query == entry_lower:
             return redirect('entry', entry)
+        
+        if query in entry_lower:
+            match.append(entry)
     
-    search_result = [entry for entry in entries if search_query in entry.lower() ]
-    return render(request, "encyclopedia/search_result.html", {"entries": search_result})
+    return render(request, "encyclopedia/search_result.html", {"entries": match})
 
 def create_entry(request):
     if request.method == "POST":
